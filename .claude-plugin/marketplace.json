@@ -1,14 +1,17 @@
 {
   "name": "marketplace-plugin-registry",
-  "description": "Plugin registry for marketplace-plugin",
+  "owner": {
+    "name": "choiwon"
+  },
   "plugins": [
     {
       "name": "marketplace-plugin",
       "description": "Create and manage Claude Code plugins in marketplace-compatible format",
       "version": "0.1.0",
-      "author": "choiwon",
-      "repository": "https://github.com/k984530/marketplace-plugin",
-      "installUrl": "https://github.com/k984530/marketplace-plugin",
+      "author": {
+        "name": "choiwon"
+      },
+      "source": "https://github.com/k984530/marketplace-plugin",
       "tags": ["plugin", "marketplace", "generator", "scaffold", "development"]
     }
   ]
