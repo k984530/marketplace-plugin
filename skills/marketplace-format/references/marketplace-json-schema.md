@@ -45,6 +45,8 @@ marketplace-repo/
 }
 ```
 
+**Important**: See [Plugin sources](#plugin-sources) section for all valid source formats.
+
 ## Top-Level Fields
 
 ### $schema (recommended)
@@ -139,27 +141,54 @@ Plugin version (semver format).
 
 ### source (required)
 
-**MUST be a relative path** within the repository, NOT a URL.
+Source can be a **string** (relative path) or an **object** (GitHub/Git URL).
+
+#### Format 1: Relative Path (string)
+
+For plugins in the same repository:
 
 ```json
 "source": "./plugins/my-plugin"
 ```
 
+**Note**: Must be `./path/to/plugin` format. Cannot use just `.` or `./`.
+
+#### Format 2: GitHub Repository (object)
+
+For plugins in separate GitHub repos:
+
+```json
+"source": {
+  "source": "github",
+  "repo": "owner/repo-name"
+}
+```
+
+#### Format 3: Git URL (object)
+
+For plugins in GitLab or other git hosts:
+
+```json
+"source": {
+  "source": "url",
+  "url": "https://gitlab.com/team/plugin.git"
+}
+```
+
+#### Common Mistakes
+
 ❌ **Wrong:**
 ```json
-"source": "https://github.com/user/repo"
+"source": "."                              // Invalid
+"source": "./"                             // Invalid
+"source": "https://github.com/user/repo"   // Must use object format
 ```
 
 ✅ **Correct:**
 ```json
-"source": "."
-"source": "./plugins/plugin-name"
+"source": "./plugins/plugin-name"          // Relative path
+"source": { "source": "github", "repo": "user/repo" }  // GitHub object
 ```
-
-**Common patterns:**
-- `.` - Plugin is at repository root
-- `./plugins/plugin-name` - Plugin in plugins subdirectory
-- `./my-plugin` - Plugin in subdirectory
 
 ### category (required)
 
@@ -221,7 +250,7 @@ Single category string for plugin classification.
 
 ## Single Plugin Repository
 
-If your repository contains only one plugin at the root:
+If your repository contains only one plugin at the root, use GitHub object format:
 
 ```json
 {
@@ -239,12 +268,17 @@ If your repository contains only one plugin at the root:
       "author": {
         "name": "Your Name"
       },
-      "source": ".",
+      "source": {
+        "source": "github",
+        "repo": "your-username/my-plugin"
+      },
       "category": "development"
     }
   ]
 }
 ```
+
+**Note**: You cannot use `"source": "."` - relative paths must be like `./plugins/name`.
 
 ## Common Mistakes
 
@@ -260,16 +294,19 @@ If your repository contains only one plugin at the root:
 "author": { "name": "John Doe" }
 ```
 
-### 2. Source as URL
+### 2. Source as Plain URL String
 
 ❌ **Wrong:**
 ```json
 "source": "https://github.com/user/repo"
+"source": "."
+"source": "./"
 ```
 
 ✅ **Correct:**
 ```json
-"source": "."
+"source": "./plugins/my-plugin"
+"source": { "source": "github", "repo": "user/repo" }
 ```
 
 ### 3. Tags Instead of Category
@@ -325,8 +362,11 @@ Before publishing marketplace:
 - [ ] `version` follows semver
 - [ ] `owner` is an object with `name` field
 - [ ] Each plugin has `name`, `description`, `author`, `source`, `category`
-- [ ] `author` is an object with `name` field
-- [ ] `source` is a relative path (starts with `.` or `./`)
+- [ ] `author` is an object with `name` field (not string)
+- [ ] `source` is either:
+  - Relative path: `./plugins/name` (not `.` or `./`)
+  - GitHub object: `{ "source": "github", "repo": "owner/repo" }`
+  - Git URL object: `{ "source": "url", "url": "https://..." }`
 - [ ] `category` is a single string value
 - [ ] No `tags`, `repository`, or `installUrl` fields
 
