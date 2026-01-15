@@ -14,7 +14,10 @@
       "author": {
         "name": "choiwon"
       },
-      "source": "./",
+      "source": {
+        "source": "github",
+        "repo": "k984530/marketplace-plugin"
+      },
       "category": "development"
     }
   ]
