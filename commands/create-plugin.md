@@ -53,7 +53,9 @@ Allow multiple selections.
 Ask for:
 - Description (one sentence)
 - Author name
+- GitHub repository URL (e.g., `https://github.com/username/plugin-name`)
 - License (MIT, Apache-2.0, etc.)
+- Category (development, productivity, security, learning, testing)
 
 ### Step 4: Create Directory Structure
 
@@ -61,7 +63,8 @@ Create the base structure:
 ```
 [plugin-name]/
 ├── .claude-plugin/
-│   └── plugin.json
+│   ├── plugin.json
+│   └── marketplace.json
 └── README.md
 ```
 
@@ -166,13 +169,11 @@ You are a helper agent...
 }
 ```
 
-### Step 8: Create marketplace.json (Optional)
+### Step 8: Create marketplace.json (Required)
 
-Ask user if they want to create a marketplace.json file to publish this plugin.
+**marketplace.json is REQUIRED for plugins to be installable via `/plugin` command.**
 
-If yes:
-1. Ask user for their GitHub repository URL (e.g., `https://github.com/username/plugin-name`)
-2. Create `.claude-plugin/marketplace.json` with **correct schema**:
+Using the GitHub URL and category from Step 3, create `.claude-plugin/marketplace.json` with **correct schema**:
 
 ```json
 {
