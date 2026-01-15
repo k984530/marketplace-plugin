@@ -136,15 +136,81 @@ After changes, validate:
 - All paths use `${CLAUDE_PLUGIN_ROOT}`
 - File names follow kebab-case
 
-### Step 8: Update marketplace.json
+### Step 8: Create or Update marketplace.json
 
-Search for marketplace.json and offer to add/update entry:
+Check if `.claude-plugin/marketplace.json` exists.
 
-If entry exists:
-- Update version, description as needed
+**If missing, create it with correct schema:**
 
-If entry missing:
-- Create new entry with plugin metadata
+Ask user to select category from: development, productivity, security, learning, testing
+
+For GitHub repository source (when plugin path is a GitHub URL like `https://github.com/owner/repo`):
+```json
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "[plugin-name]-registry",
+  "version": "1.0.0",
+  "owner": {
+    "name": "[author-name from plugin.json]"
+  },
+  "plugins": [
+    {
+      "name": "[plugin-name]",
+      "description": "[plugin-description]",
+      "version": "[plugin-version]",
+      "author": {
+        "name": "[author-name]"
+      },
+      "source": {
+        "source": "url",
+        "url": "[github-https-url].git"
+      },
+      "category": "[user-selected-category]"
+    }
+  ]
+}
+```
+
+For local plugin (ask user for GitHub repo info):
+```json
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "[plugin-name]-registry",
+  "version": "1.0.0",
+  "owner": {
+    "name": "[author-name]"
+  },
+  "plugins": [
+    {
+      "name": "[plugin-name]",
+      "description": "[plugin-description]",
+      "version": "[plugin-version]",
+      "author": {
+        "name": "[author-name]"
+      },
+      "source": {
+        "source": "github",
+        "repo": "[owner/repo-name]"
+      },
+      "category": "[user-selected-category]"
+    }
+  ]
+}
+```
+
+**CRITICAL marketplace.json schema rules:**
+- `owner` MUST be object: `{ "name": "..." }`
+- `author` MUST be object: `{ "name": "..." }` (NOT a string)
+- `source` MUST be one of:
+  - Relative path: `./plugins/name` (for multi-plugin repos)
+  - GitHub object: `{ "source": "github", "repo": "owner/repo" }`
+  - URL object: `{ "source": "url", "url": "https://..." }`
+- Use `category` (single string), NOT `tags` (array)
+- Do NOT use `installUrl`, `repository`, or `tags` fields
+
+**If marketplace.json exists, update entry:**
+- Update version, description from plugin.json
+- Fix any schema issues (string author → object, invalid source format, etc.)
 
 ### Step 9: Report Results
 
@@ -160,13 +226,15 @@ Conversion Complete!
 
 Changes applied:
 ✓ Created .claude-plugin/plugin.json
+✓ Created .claude-plugin/marketplace.json
 ✓ Fixed 3 hardcoded paths
 ✓ Renamed 2 files to kebab-case
 
 New structure:
 plugin-name/
 ├── .claude-plugin/
-│   └── plugin.json
+│   ├── plugin.json
+│   └── marketplace.json
 ├── commands/
 ├── agents/
 └── README.md
@@ -174,7 +242,7 @@ plugin-name/
 Next steps:
 1. Review changes with git diff
 2. Test plugin: claude --plugin-dir [path]
-3. Update marketplace.json installUrl
+3. Push to GitHub and install with /plugin command
 ```
 
 ## Validation Checks
