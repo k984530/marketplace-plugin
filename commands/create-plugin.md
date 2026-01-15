@@ -159,27 +159,49 @@ You are a helper agent...
 }
 ```
 
-### Step 8: Find and Update marketplace.json
+### Step 8: Create marketplace.json (Optional)
 
-Search for `marketplace.json` in:
-1. Current directory
-2. Parent directories (up to 3 levels)
-3. Common locations (`~/.claude/`, project root)
+Ask user if they want to create a marketplace.json file to publish this plugin.
 
-If found, ask user if they want to add plugin entry.
+If yes, create `.claude-plugin/marketplace.json` with **correct schema**:
 
-If yes, add entry:
 ```json
 {
-  "name": "[plugin-name]",
-  "description": "[description]",
-  "version": "0.1.0",
-  "author": "[author]",
-  "repository": "",
-  "installUrl": "",
-  "tags": []
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "[plugin-name]-registry",
+  "version": "1.0.0",
+  "description": "Marketplace for [plugin-name]",
+  "owner": {
+    "name": "[user-provided author]"
+  },
+  "plugins": [
+    {
+      "name": "[plugin-name]",
+      "description": "[user-provided description]",
+      "version": "0.1.0",
+      "author": {
+        "name": "[user-provided author]"
+      },
+      "source": ".",
+      "category": "[user-selected category]"
+    }
+  ]
 }
 ```
+
+**CRITICAL marketplace.json rules:**
+- `owner` MUST be an object: `{ "name": "..." }`
+- `author` MUST be an object: `{ "name": "..." }` (NOT a string)
+- `source` MUST be a relative path: `.` or `./plugins/...` (NOT a URL)
+- Use `category` (single string), NOT `tags` (array)
+- Do NOT use `repository`, `installUrl`, or `tags` fields
+
+**Available categories:**
+- `development` - Development tools
+- `productivity` - Workflow optimization
+- `security` - Security tools
+- `learning` - Educational plugins
+- `testing` - Test automation
 
 ### Step 9: Report Results
 
@@ -190,7 +212,7 @@ Display summary:
   1. Edit plugin.json to add repository URL
   2. Create actual commands/skills/agents
   3. Test with `claude --plugin-dir [path]`
-  4. Update marketplace.json with installUrl
+  4. Push to GitHub and register with `/plugin` command
 
 ## Notes
 
@@ -198,3 +220,19 @@ Display summary:
 - Follow kebab-case naming throughout
 - Skill descriptions must use third-person format
 - Commands are instructions FOR Claude, not TO user
+
+## marketplace.json Common Mistakes
+
+❌ **Wrong:**
+```json
+"author": "John Doe"
+"source": "https://github.com/..."
+"tags": ["dev", "test"]
+```
+
+✅ **Correct:**
+```json
+"author": { "name": "John Doe" }
+"source": "."
+"category": "development"
+```

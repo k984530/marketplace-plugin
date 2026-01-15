@@ -67,44 +67,73 @@ plugin-name/
 
 **Name requirements:** kebab-case, unique, no spaces or special characters
 
-## marketplace.json Entry
+## marketplace.json
 
-To publish a plugin, add an entry to `marketplace.json`:
+To publish as a marketplace, create `.claude-plugin/marketplace.json`:
 
 ```json
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "my-marketplace",
+  "version": "1.0.0",
+  "owner": {
+    "name": "Owner Name"
+  },
   "plugins": [
     {
       "name": "plugin-name",
-      "description": "Brief description for marketplace listing",
+      "description": "Brief description",
       "version": "1.0.0",
-      "author": "Author Name",
-      "repository": "https://github.com/user/plugin-name",
-      "tags": ["category1", "category2"],
-      "installUrl": "https://github.com/user/plugin-name"
+      "author": {
+        "name": "Author Name"
+      },
+      "source": ".",
+      "category": "development"
     }
   ]
 }
 ```
 
-### Required marketplace.json Fields
+### Critical Schema Rules
 
-| Field | Description |
-|-------|-------------|
-| `name` | Plugin identifier (kebab-case) |
-| `description` | Short description for listing |
-| `version` | Current version (semver) |
-| `author` | Author name or organization |
-| `repository` | Source code URL |
-| `installUrl` | URL for installation |
+**1. `owner` must be an object:**
+```json
+"owner": { "name": "Owner Name" }
+```
 
-### Optional marketplace.json Fields
+**2. `author` must be an object (not string):**
+```json
+"author": { "name": "Author Name" }
+```
 
-| Field | Description |
-|-------|-------------|
-| `tags` | Categories for discovery |
-| `homepage` | Documentation URL |
-| `license` | License type |
+**3. `source` must be relative path (not URL):**
+```json
+"source": "."              // Plugin at repo root
+"source": "./plugins/x"    // Plugin in subdirectory
+```
+
+**4. Use `category` (not `tags`):**
+```json
+"category": "development"  // Single string
+```
+
+### Available Categories
+
+- `development` - Development tools
+- `productivity` - Workflow optimization
+- `security` - Security tools
+- `learning` - Educational plugins
+- `testing` - Test automation
+
+### Common Mistakes to Avoid
+
+| Wrong | Correct |
+|-------|---------|
+| `"author": "John"` | `"author": { "name": "John" }` |
+| `"source": "https://..."` | `"source": "."` |
+| `"tags": [...]` | `"category": "development"` |
+| `"installUrl": "..."` | Use `source` instead |
+| Missing `owner` | Add `"owner": { "name": "..." }` |
 
 ## Component Types
 
