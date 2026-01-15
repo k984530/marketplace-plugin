@@ -15,8 +15,8 @@
         "name": "choiwon"
       },
       "source": {
-        "source": "github",
-        "repo": "k984530/marketplace-plugin"
+        "source": "url",
+        "url": "https://github.com/k984530/marketplace-plugin.git"
       },
       "category": "development"
     }
