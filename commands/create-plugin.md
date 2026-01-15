@@ -83,10 +83,17 @@ Create `.claude-plugin/plugin.json` with:
   "author": {
     "name": "[user-provided author]"
   },
+  "repository": "https://github.com/[username]/[plugin-name]",
   "license": "[user-provided license]",
   "keywords": []
 }
 ```
+
+**CRITICAL plugin.json rules:**
+- `name`: Required, kebab-case string
+- `author`: MUST be object `{ "name": "..." }`, NOT string
+- `repository`: MUST be string URL, NOT object
+- Do NOT include `commands`, `agents`, `skills`, `hooks` fields (auto-discovered)
 
 ### Step 6: Generate README.md
 
@@ -227,19 +234,36 @@ Display summary:
 - Skill descriptions must use third-person format
 - Commands are instructions FOR Claude, not TO user
 
-## marketplace.json Common Mistakes
+## Common Mistakes Reference
 
-❌ **Wrong:**
-```json
-"author": "John Doe"
-"source": "."
-"source": "https://github.com/..."
-"tags": ["dev", "test"]
-```
+### plugin.json Mistakes
 
-✅ **Correct:**
-```json
-"author": { "name": "John Doe" }
-"source": { "source": "url", "url": "https://github.com/owner/repo.git" }
-"category": "development"
-```
+| Wrong | Correct |
+|-------|---------|
+| `"author": "John"` | `"author": { "name": "John" }` |
+| `"repository": { "type": "git", ... }` | `"repository": "https://..."` |
+| `"commands": { "source": "..." }` | Remove field (auto-discovered) |
+| `"hooks": { "source": "..." }` | Remove field (auto-discovered) |
+
+### marketplace.json Mistakes
+
+| Wrong | Correct |
+|-------|---------|
+| `"author": "John"` | `"author": { "name": "John" }` |
+| `"source": "."` | `{ "source": "url", "url": "https://..." }` |
+| `"source": "https://..."` | `{ "source": "url", "url": "https://..." }` |
+| `"tags": [...]` | `"category": "development"` |
+| Missing `owner` | `"owner": { "name": "..." }` |
+| `"installUrl": "..."` | Use `source` object instead |
+
+## Validation Checklist
+
+Before finishing:
+- [ ] plugin.json has `name` field (kebab-case)
+- [ ] plugin.json `author` is object (not string)
+- [ ] plugin.json `repository` is string (not object)
+- [ ] plugin.json has NO `commands/agents/skills/hooks` object configs
+- [ ] marketplace.json has `owner` as object
+- [ ] marketplace.json has `author` as object
+- [ ] marketplace.json `source` uses HTTPS URL object format
+- [ ] marketplace.json has `category` (not `tags`)
