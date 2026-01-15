@@ -2,7 +2,7 @@
 name: convert-plugin
 description: Convert an existing plugin to marketplace-compatible format
 allowed-tools: [Read, Write, Bash, Glob, Grep, AskUserQuestion]
-argument-hint: "[plugin-path]"
+argument-hint: "[plugin-path-or-github-url]"
 ---
 
 # Convert Plugin to Marketplace Format
@@ -11,14 +11,18 @@ Analyze an existing plugin and convert it to marketplace-compatible format.
 
 ## Arguments
 
-- `$1`: Path to existing plugin (required)
+- `$1`: Path to existing plugin or GitHub URL (required)
 
 ## Implementation
 
 ### Step 1: Validate Plugin Path
 
 If `$1` is not provided:
-- Ask user for plugin path using AskUserQuestion
+- Ask user for plugin path or GitHub URL using AskUserQuestion
+
+If `$1` is a GitHub URL (starts with `https://github.com/`):
+- Clone the repository to a temp directory
+- Continue with conversion
 
 Check if path exists:
 - If doesn't exist, report error and exit
@@ -30,6 +34,7 @@ Scan the plugin directory to identify:
 
 **Existing components:**
 - Check for `.claude-plugin/plugin.json` (manifest)
+- Check for `.claude-plugin/marketplace.json` (marketplace registry)
 - Check for `plugin.json` in root (old format)
 - Check for `commands/` directory
 - Check for `agents/` directory
@@ -42,6 +47,7 @@ Scan the plugin directory to identify:
 ```
 Plugin Analysis:
 - Manifest: [found/missing] at [location]
+- Marketplace: [found/missing]
 - Commands: [count] files found
 - Agents: [count] files found
 - Skills: [count] directories found
@@ -53,11 +59,22 @@ Plugin Analysis:
 
 Check for marketplace compatibility issues:
 
-**Critical issues:**
+**Critical plugin.json issues:**
 - Missing `.claude-plugin/` directory
 - plugin.json in wrong location
 - Invalid plugin name (not kebab-case)
-- Missing required fields in manifest
+- Missing required `name` field
+- `repository` is object instead of string
+- `author` is string instead of object
+- Invalid `commands/agents/skills/hooks` object configs (should be auto-discovered)
+
+**Critical marketplace.json issues:**
+- Missing marketplace.json (required for /plugin install)
+- `owner` is missing or not an object
+- `author` is string instead of object
+- `source` is invalid (e.g., `"."`, `"./"`, plain URL string)
+- Using `tags` instead of `category`
+- Using invalid fields (`installUrl`, `repository`)
 
 **Warnings:**
 - Hardcoded paths (should use `${CLAUDE_PLUGIN_ROOT}`)
@@ -68,115 +85,78 @@ Check for marketplace compatibility issues:
 
 **Report all issues found.**
 
-### Step 4: Propose Fixes
+### Step 4: Gather Required Information
 
-For each issue, propose a fix:
+Use AskUserQuestion to collect:
 
-**Manifest issues:**
-- Create `.claude-plugin/` if missing
-- Move plugin.json to correct location
-- Add missing required fields
-- Fix plugin name to kebab-case
+1. **GitHub Repository URL** (if not already known):
+   - "What is the GitHub repository URL for this plugin?"
+   - Example: `https://github.com/username/plugin-name`
 
-**Path issues:**
-- Replace hardcoded paths with `${CLAUDE_PLUGIN_ROOT}`
-- List all files that need updates
+2. **Author name** (if not in plugin.json):
+   - "What is your name or organization name?"
 
-**Structure issues:**
-- Move components to correct directories
-- Rename files to follow conventions
+3. **Category**:
+   - Options: development, productivity, security, learning, testing
 
-### Step 5: Confirm Changes
+4. **Confirm changes**:
+   - Show list of proposed changes
+   - Ask user to approve
 
-Use AskUserQuestion to confirm:
-- Show list of proposed changes
-- Ask user to approve or customize
+### Step 5: Fix plugin.json
 
-Options:
-- Apply all changes
-- Apply selectively
-- Cancel conversion
+Read existing plugin.json and fix all issues:
 
-### Step 6: Apply Changes
-
-If user approves, apply changes:
-
-**Create directories:**
-```bash
-mkdir -p .claude-plugin
-```
-
-**Move/create manifest:**
-If plugin.json exists elsewhere, move it:
-```bash
-mv plugin.json .claude-plugin/plugin.json
-```
-
-Otherwise, create new manifest.
-
-**Update manifest fields:**
-- Ensure `name` is kebab-case
-- Add `version` if missing (default: "0.1.0")
-- Add `description` if missing (prompt user)
-
-**Fix paths in files:**
-For each file with hardcoded paths:
-- Replace absolute paths with `${CLAUDE_PLUGIN_ROOT}`
-- Preserve file functionality
-
-**Reorganize components:**
-- Move misplaced files to correct directories
-- Rename files to follow conventions
-
-### Step 7: Validate Result
-
-After changes, validate:
-- `.claude-plugin/plugin.json` exists and is valid JSON
-- All component directories at root level
-- All paths use `${CLAUDE_PLUGIN_ROOT}`
-- File names follow kebab-case
-
-### Step 8: Create or Update marketplace.json
-
-Check if `.claude-plugin/marketplace.json` exists.
-
-**If missing, create it with correct schema:**
-
-Ask user to select category from: development, productivity, security, learning, testing
-
-For GitHub repository source (when plugin path is a GitHub URL like `https://github.com/owner/repo`):
+**Correct plugin.json format:**
 ```json
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "[plugin-name]-registry",
-  "version": "1.0.0",
-  "owner": {
-    "name": "[author-name from plugin.json]"
+  "name": "plugin-name",
+  "version": "0.1.0",
+  "description": "Plugin description",
+  "author": {
+    "name": "Author Name",
+    "email": "author@example.com"
   },
-  "plugins": [
-    {
-      "name": "[plugin-name]",
-      "description": "[plugin-description]",
-      "version": "[plugin-version]",
-      "author": {
-        "name": "[author-name]"
-      },
-      "source": {
-        "source": "url",
-        "url": "[github-https-url].git"
-      },
-      "category": "[user-selected-category]"
-    }
-  ]
+  "repository": "https://github.com/owner/repo",
+  "license": "MIT",
+  "keywords": ["keyword1", "keyword2"]
 }
 ```
 
-For local plugin (ask user for GitHub repo URL):
+**CRITICAL plugin.json rules:**
+- `name`: Required, kebab-case string
+- `version`: Recommended, semver string (e.g., "0.1.0")
+- `description`: Recommended, string
+- `author`: MUST be object `{ "name": "..." }`, NOT string
+- `repository`: MUST be string URL, NOT object
+- Do NOT include `commands`, `agents`, `skills`, `hooks` fields (auto-discovered)
+
+**Fix these common mistakes:**
+
+❌ Wrong:
+```json
+"author": "John Doe"
+"repository": { "type": "git", "url": "..." }
+"commands": { "source": "commands", "discover": true }
+```
+
+✅ Correct:
+```json
+"author": { "name": "John Doe" }
+"repository": "https://github.com/owner/repo"
+// commands field removed - auto-discovered
+```
+
+### Step 6: Create marketplace.json
+
+Create `.claude-plugin/marketplace.json` with correct schema:
+
 ```json
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "[plugin-name]-registry",
   "version": "1.0.0",
+  "description": "Marketplace registry for [plugin-name]",
   "owner": {
     "name": "[author-name]"
   },
@@ -190,7 +170,7 @@ For local plugin (ask user for GitHub repo URL):
       },
       "source": {
         "source": "url",
-        "url": "https://github.com/[owner]/[repo-name].git"
+        "url": "https://github.com/[owner]/[repo].git"
       },
       "category": "[user-selected-category]"
     }
@@ -198,37 +178,64 @@ For local plugin (ask user for GitHub repo URL):
 }
 ```
 
-**CRITICAL marketplace.json schema rules:**
+**CRITICAL marketplace.json rules:**
 - `owner` MUST be object: `{ "name": "..." }`
-- `author` MUST be object: `{ "name": "..." }` (NOT a string)
-- `source` MUST use HTTPS URL format for public repos (GitHub SSH requires auth):
-  - URL object (recommended): `{ "source": "url", "url": "https://github.com/owner/repo.git" }`
-  - Relative path: `./plugins/name` (only for multi-plugin repos)
-  - GitHub object: `{ "source": "github", "repo": "owner/repo" }` (uses SSH, requires auth)
+- `author` MUST be object: `{ "name": "..." }` (NOT string)
+- `source` MUST be HTTPS URL object for single-plugin repos:
+  ```json
+  "source": {
+    "source": "url",
+    "url": "https://github.com/owner/repo.git"
+  }
+  ```
+- `"."` or `"./"` alone is **INVALID**
+- `{ "source": "github", "repo": "..." }` uses SSH (requires auth) - avoid for public repos
 - Use `category` (single string), NOT `tags` (array)
 - Do NOT use `installUrl`, `repository`, or `tags` fields
 
-**If marketplace.json exists, update entry:**
-- Update version, description from plugin.json
-- Fix any schema issues (string author → object, invalid source format, etc.)
+### Step 7: Fix Other Issues
+
+**Fix paths in files:**
+- Replace hardcoded paths with `${CLAUDE_PLUGIN_ROOT}`
+- Update hooks.json, .mcp.json with portable paths
+
+**Reorganize if needed:**
+- Move misplaced files to correct directories
+- Rename files to follow kebab-case
+
+### Step 8: Validate Result
+
+After changes, validate:
+- `.claude-plugin/plugin.json` exists and is valid JSON
+- `.claude-plugin/marketplace.json` exists and is valid JSON
+- All component directories at root level
+- All paths use `${CLAUDE_PLUGIN_ROOT}`
+- File names follow kebab-case
+
+**Validation checklist:**
+- [ ] plugin.json has `name` field
+- [ ] plugin.json `author` is object (not string)
+- [ ] plugin.json `repository` is string (not object)
+- [ ] plugin.json has NO `commands/agents/skills/hooks` object configs
+- [ ] marketplace.json has `owner` as object
+- [ ] marketplace.json has `author` as object
+- [ ] marketplace.json `source` uses HTTPS URL object format
+- [ ] marketplace.json has `category` (not `tags`)
 
 ### Step 9: Report Results
 
 Display summary:
-- Changes made
-- Files modified
-- New structure overview
-- Remaining manual tasks (if any)
-- Testing instructions
-
 ```
 Conversion Complete!
 
 Changes applied:
-✓ Created .claude-plugin/plugin.json
+✓ Fixed .claude-plugin/plugin.json
+  - Changed author from string to object
+  - Changed repository from object to string
+  - Removed invalid commands/agents/skills/hooks configs
 ✓ Created .claude-plugin/marketplace.json
-✓ Fixed 3 hardcoded paths
-✓ Renamed 2 files to kebab-case
+  - Using HTTPS URL source format
+  - Category: development
 
 New structure:
 plugin-name/
@@ -240,43 +247,30 @@ plugin-name/
 └── README.md
 
 Next steps:
-1. Review changes with git diff
-2. Test plugin: claude --plugin-dir [path]
-3. Push to GitHub and install with /plugin command
+1. Review changes: git diff
+2. Commit: git add -A && git commit -m "Convert to marketplace format"
+3. Push: git push
+4. Install: /plugin owner/repo
 ```
 
-## Validation Checks
+## Common Mistakes Reference
 
-Before conversion:
-- Verify path is valid directory
-- Check for existing .claude-plugin (avoid overwrite)
-- Backup recommendation if major changes needed
+### plugin.json Mistakes
 
-During conversion:
-- Validate JSON before writing
-- Preserve original files when renaming
-- Handle merge conflicts in manifest
+| Wrong | Correct |
+|-------|---------|
+| `"author": "John"` | `"author": { "name": "John" }` |
+| `"repository": { "type": "git", ... }` | `"repository": "https://..."` |
+| `"commands": { "source": "..." }` | Remove field (auto-discovered) |
+| `"hooks": { "source": "..." }` | Remove field (auto-discovered) |
 
-After conversion:
-- Run plugin validator if available
-- Check all components load correctly
+### marketplace.json Mistakes
 
-## Edge Cases
-
-**Already marketplace-compatible:**
-- Report "Plugin is already marketplace-compatible"
-- Suggest minor improvements if any
-
-**Multiple plugin.json files:**
-- Ask user which one is the main manifest
-- Merge configurations if appropriate
-
-**Complex hook configurations:**
-- Carefully update paths
-- Preserve hook logic and matchers
-- Test hooks after conversion
-
-**MCP server configurations:**
-- Update command paths
-- Preserve environment variables
-- Validate server definitions
+| Wrong | Correct |
+|-------|---------|
+| `"author": "John"` | `"author": { "name": "John" }` |
+| `"source": "."` | `{ "source": "url", "url": "https://..." }` |
+| `"source": "https://..."` | `{ "source": "url", "url": "https://..." }` |
+| `"tags": [...]` | `"category": "development"` |
+| Missing `owner` | `"owner": { "name": "..." }` |
+| `"installUrl": "..."` | Use `source` object instead |
