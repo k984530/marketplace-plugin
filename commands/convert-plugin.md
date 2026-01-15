@@ -171,7 +171,7 @@ For GitHub repository source (when plugin path is a GitHub URL like `https://git
 }
 ```
 
-For local plugin (ask user for GitHub repo info):
+For local plugin (ask user for GitHub repo URL):
 ```json
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
@@ -189,8 +189,8 @@ For local plugin (ask user for GitHub repo info):
         "name": "[author-name]"
       },
       "source": {
-        "source": "github",
-        "repo": "[owner/repo-name]"
+        "source": "url",
+        "url": "https://github.com/[owner]/[repo-name].git"
       },
       "category": "[user-selected-category]"
     }
@@ -201,10 +201,10 @@ For local plugin (ask user for GitHub repo info):
 **CRITICAL marketplace.json schema rules:**
 - `owner` MUST be object: `{ "name": "..." }`
 - `author` MUST be object: `{ "name": "..." }` (NOT a string)
-- `source` MUST be one of:
-  - Relative path: `./plugins/name` (for multi-plugin repos)
-  - GitHub object: `{ "source": "github", "repo": "owner/repo" }`
-  - URL object: `{ "source": "url", "url": "https://..." }`
+- `source` MUST use HTTPS URL format for public repos (GitHub SSH requires auth):
+  - URL object (recommended): `{ "source": "url", "url": "https://github.com/owner/repo.git" }`
+  - Relative path: `./plugins/name` (only for multi-plugin repos)
+  - GitHub object: `{ "source": "github", "repo": "owner/repo" }` (uses SSH, requires auth)
 - Use `category` (single string), NOT `tags` (array)
 - Do NOT use `installUrl`, `repository`, or `tags` fields
 

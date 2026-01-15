@@ -163,7 +163,9 @@ You are a helper agent...
 
 Ask user if they want to create a marketplace.json file to publish this plugin.
 
-If yes, create `.claude-plugin/marketplace.json` with **correct schema**:
+If yes:
+1. Ask user for their GitHub repository URL (e.g., `https://github.com/username/plugin-name`)
+2. Create `.claude-plugin/marketplace.json` with **correct schema**:
 
 ```json
 {
@@ -182,7 +184,10 @@ If yes, create `.claude-plugin/marketplace.json` with **correct schema**:
       "author": {
         "name": "[user-provided author]"
       },
-      "source": ".",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/[username]/[repo-name].git"
+      },
       "category": "[user-selected category]"
     }
   ]
@@ -192,7 +197,9 @@ If yes, create `.claude-plugin/marketplace.json` with **correct schema**:
 **CRITICAL marketplace.json rules:**
 - `owner` MUST be an object: `{ "name": "..." }`
 - `author` MUST be an object: `{ "name": "..." }` (NOT a string)
-- `source` MUST be a relative path: `.` or `./plugins/...` (NOT a URL)
+- `source` MUST use HTTPS URL object format for single-plugin repos:
+  - `{ "source": "url", "url": "https://github.com/owner/repo.git" }`
+- `"."` or `"./"` alone is INVALID
 - Use `category` (single string), NOT `tags` (array)
 - Do NOT use `repository`, `installUrl`, or `tags` fields
 
@@ -209,10 +216,9 @@ Display summary:
 - Plugin location
 - Created files list
 - Next steps:
-  1. Edit plugin.json to add repository URL
-  2. Create actual commands/skills/agents
-  3. Test with `claude --plugin-dir [path]`
-  4. Push to GitHub and register with `/plugin` command
+  1. Create actual commands/skills/agents
+  2. Test with `claude --plugin-dir [path]`
+  3. Push to GitHub and register with `/plugin` command
 
 ## Notes
 
@@ -226,6 +232,7 @@ Display summary:
 ❌ **Wrong:**
 ```json
 "author": "John Doe"
+"source": "."
 "source": "https://github.com/..."
 "tags": ["dev", "test"]
 ```
@@ -233,6 +240,6 @@ Display summary:
 ✅ **Correct:**
 ```json
 "author": { "name": "John Doe" }
-"source": "."
+"source": { "source": "url", "url": "https://github.com/owner/repo.git" }
 "category": "development"
 ```

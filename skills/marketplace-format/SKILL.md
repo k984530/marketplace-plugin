@@ -106,11 +106,25 @@ To publish as a marketplace, create `.claude-plugin/marketplace.json`:
 "author": { "name": "Author Name" }
 ```
 
-**3. `source` must be relative path (not URL):**
+**3. `source` format (CRITICAL):**
+
+For single-plugin repos (plugin at root), use HTTPS URL object:
 ```json
-"source": "."              // Plugin at repo root
-"source": "./plugins/x"    // Plugin in subdirectory
+"source": {
+  "source": "url",
+  "url": "https://github.com/owner/repo.git"
+}
 ```
+
+For multi-plugin repos (plugins in subdirectories):
+```json
+"source": "./plugins/plugin-name"
+```
+
+**IMPORTANT:**
+- `"."` or `"./"` alone is INVALID
+- GitHub object `{ "source": "github", "repo": "..." }` uses SSH (requires auth)
+- Always use HTTPS URL format for public repos
 
 **4. Use `category` (not `tags`):**
 ```json
@@ -130,9 +144,10 @@ To publish as a marketplace, create `.claude-plugin/marketplace.json`:
 | Wrong | Correct |
 |-------|---------|
 | `"author": "John"` | `"author": { "name": "John" }` |
-| `"source": "https://..."` | `"source": "."` |
+| `"source": "."` | `{ "source": "url", "url": "https://..." }` |
+| `"source": "https://..."` (string) | `{ "source": "url", "url": "https://..." }` (object) |
 | `"tags": [...]` | `"category": "development"` |
-| `"installUrl": "..."` | Use `source` instead |
+| `"installUrl": "..."` | Use `source` object instead |
 | Missing `owner` | Add `"owner": { "name": "..." }` |
 
 ## Component Types

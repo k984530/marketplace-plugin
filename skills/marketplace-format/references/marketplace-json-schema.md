@@ -250,7 +250,7 @@ Single category string for plugin classification.
 
 ## Single Plugin Repository
 
-If your repository contains only one plugin at the root, use GitHub object format:
+If your repository contains only one plugin at the root, use HTTPS URL object format:
 
 ```json
 {
@@ -269,8 +269,8 @@ If your repository contains only one plugin at the root, use GitHub object forma
         "name": "Your Name"
       },
       "source": {
-        "source": "github",
-        "repo": "your-username/my-plugin"
+        "source": "url",
+        "url": "https://github.com/your-username/my-plugin.git"
       },
       "category": "development"
     }
@@ -278,7 +278,10 @@ If your repository contains only one plugin at the root, use GitHub object forma
 }
 ```
 
-**Note**: You cannot use `"source": "."` - relative paths must be like `./plugins/name`.
+**IMPORTANT:**
+- You cannot use `"source": "."` or `"source": "./"` - these are INVALID
+- Use HTTPS URL format for public repos (no authentication required)
+- GitHub object format `{ "source": "github", "repo": "..." }` uses SSH and requires authentication
 
 ## Common Mistakes
 
