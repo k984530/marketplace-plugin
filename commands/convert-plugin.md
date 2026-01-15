@@ -181,17 +181,33 @@ Create `.claude-plugin/marketplace.json` with correct schema:
 **CRITICAL marketplace.json rules:**
 - `owner` MUST be object: `{ "name": "..." }`
 - `author` MUST be object: `{ "name": "..." }` (NOT string)
-- `source` MUST be HTTPS URL object for single-plugin repos:
+- `source` MUST be an **OBJECT** with nested structure:
   ```json
   "source": {
     "source": "url",
     "url": "https://github.com/owner/repo.git"
   }
   ```
-- `"."` or `"./"` alone is **INVALID**
-- `{ "source": "github", "repo": "..." }` uses SSH (requires auth) - avoid for public repos
 - Use `category` (single string), NOT `tags` (array)
 - Do NOT use `installUrl`, `repository`, or `tags` fields
+
+**❌ INVALID source formats (DO NOT USE):**
+```json
+"source": "."
+"source": "./"
+"source": "https://github.com/owner/repo"
+"source": "github:owner/repo"
+"source": "owner/repo"
+"source": { "source": "github", "repo": "..." }  // Uses SSH, requires auth
+```
+
+**✅ ONLY valid source format for public repos:**
+```json
+"source": {
+  "source": "url",
+  "url": "https://github.com/owner/repo.git"
+}
+```
 
 ### Step 7: Fix Other Issues
 

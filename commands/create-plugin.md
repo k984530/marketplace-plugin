@@ -205,11 +205,32 @@ Using the GitHub URL and category from Step 3, create `.claude-plugin/marketplac
 **CRITICAL marketplace.json rules:**
 - `owner` MUST be an object: `{ "name": "..." }`
 - `author` MUST be an object: `{ "name": "..." }` (NOT a string)
-- `source` MUST use HTTPS URL object format for single-plugin repos:
-  - `{ "source": "url", "url": "https://github.com/owner/repo.git" }`
-- `"."` or `"./"` alone is INVALID
+- `source` MUST be an **OBJECT** with nested structure:
+  ```json
+  "source": {
+    "source": "url",
+    "url": "https://github.com/owner/repo.git"
+  }
+  ```
 - Use `category` (single string), NOT `tags` (array)
 - Do NOT use `repository`, `installUrl`, or `tags` fields
+
+**❌ INVALID source formats (DO NOT USE):**
+```json
+"source": "."
+"source": "./"
+"source": "https://github.com/owner/repo"
+"source": "github:owner/repo"
+"source": "owner/repo"
+```
+
+**✅ ONLY valid source format:**
+```json
+"source": {
+  "source": "url",
+  "url": "https://github.com/owner/repo.git"
+}
+```
 
 **Available categories:**
 - `development` - Development tools
