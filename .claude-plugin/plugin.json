@@ -1,0 +1,11 @@
+{
+  "name": "marketplace-plugin",
+  "version": "0.1.0",
+  "description": "Create and manage Claude Code plugins in marketplace-compatible format",
+  "author": {
+    "name": "choiwon"
+  },
+  "repository": "https://github.com/k984530/marketplace-plugin",
+  "license": "MIT",
+  "keywords": ["plugin", "marketplace", "generator", "scaffold"]
+}
